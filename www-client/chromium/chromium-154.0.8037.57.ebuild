@@ -116,7 +116,6 @@ COMMON_X_DEPEND="
 # sys-libs/zlib: https://bugs.gentoo.org/930365; -ng is not compatible.
 # We _could_ use the bundled minizip, but that's against policy.
 COMMON_SNAPSHOT_DEPEND="
-	>=dev-lang/typescript-6.0.3
 	system-icu? ( >=dev-libs/icu-73.0:= )
 	>=dev-libs/libxml2-2.12.4:=[icu]
 	dev-libs/nspr:=
@@ -227,6 +226,7 @@ BDEPEND="
 	>=dev-util/bindgen-0.72.1
 	>=dev-build/gn-${GN_MIN_VER}
 	>=dev-lang/go-${GO_MIN_VER}
+	>=dev-lang/typescript-6.0.3
 	app-alternatives/ninja
 	dev-lang/perl
 	>=dev-util/gperf-3.2
