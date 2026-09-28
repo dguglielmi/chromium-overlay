@@ -14,7 +14,7 @@ if [[ ${PV} == 9999 ]]; then
 else
 	# The version number is derived from `git describe HEAD --abbrev=12`
 	GN_COMMIT="150a9d6ba0aa7f407aa4feeabc5f03ce9aa7e04b"
-	SRC_URI="https://gn.googlesource.com/gn/+archive/${GN_COMMIT}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/dguglielmi/chromium-overlay/releases/download/${PV}/${P}.tar.gz"
 	KEYWORDS="~amd64 ~arm64 ~loong ~ppc64 ~riscv x86"
 	S="${WORKDIR}"
 fi
