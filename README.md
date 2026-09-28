@@ -1,7 +1,7 @@
 ![pkgcheck](https://github.com/dguglielmi/chromium-overlay/actions/workflows/pkgcheck.yaml/badge.svg)
 
 # chromium-overlay
-A Gentoo Linux Chromium browser overlay.
+A Gentoo Overlay for Chromium browser.
 
 ## How to use this overlay ?
 You can use this overlay with portage plug-in sync system (see: https://wiki.gentoo.org/wiki/Project:Portage/Sync)
