@@ -1,0 +1,114 @@
+From: AVX Chromium maintenance
+Subject: [PATCH] build/rust: honor rust_sysroot for M154 bindings and wrappers
+
+Refresh the Gentoo M152 patch for M154's Crubit script layout.
+
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -431,7 +431,7 @@
+ ]
+ 
+ if (host_os == "win") {
+-  rustc_wrapper_inputs += [ "//third_party/rust-toolchain/bin/rustc.exe" ]
++  rustc_wrapper_inputs += [ "$rust_sysroot/bin/rustc.exe" ]
+ } else {
+-  rustc_wrapper_inputs += [ "//third_party/rust-toolchain/bin/rustc" ]
+-}
++  rustc_wrapper_inputs += [ "$rust_sysroot/bin/rustc" ]
++}
+--- a/build/rust/gni_impl/run_rs_bindings_from_cc.py
++++ b/build/rust/gni_impl/run_rs_bindings_from_cc.py
+@@ -15,14 +15,7 @@
+ sys.path.append(THIS_DIR)
+ from filter_clang_args import filter_clang_args
+ 
+-RUST_TOOLCHAIN_DIR = os.path.join(
+-    CHROMIUM_SRC_DIR, "third_party", "rust-toolchain"
+-)
+-RUSTFMT_EXE_PATH = os.path.join(RUST_TOOLCHAIN_DIR, "bin", "rustfmt")
+ RUSTFMT_CONFIG_PATH = os.path.join(CHROMIUM_SRC_DIR, ".rustfmt.toml")
+-RS_BINDINGS_FROM_CC_EXE_PATH = os.path.join(
+-    RUST_TOOLCHAIN_DIR, "bin", "rs_bindings_from_cc"
+-)
+ CRUBIT_SUPPORT_PATH = os.path.join(
+     "third_party", "crubit", "src", "rs_bindings_from_cc", "support"
+ )
+@@ -41,6 +34,8 @@
+ 
+ def main():
+     parser = argparse.ArgumentParser()
++    parser.add_argument("--rs_bindings_from_cc_path", required=True)
++    parser.add_argument("--rustfmt_path", required=True)
+     (
+         parser.add_argument(
+             "--targets_and_args_from_gn",
+@@ -114,7 +109,7 @@
+     )
+ 
+     # All Crubit invocations in Chromium share the following cmdline args.
+-    generator_args.append(f"--rustfmt_exe_path={RUSTFMT_EXE_PATH}")
++    generator_args.append(f"--rustfmt_exe_path={args.rustfmt_path}")
+     generator_args.append(f"--rustfmt_config_path={RUSTFMT_CONFIG_PATH}")
+     generator_args.append(f"--crubit_support_path={CRUBIT_SUPPORT_PATH}")
+ 
+@@ -135,7 +130,7 @@
+     clang_args.extend(filter_clang_args(args.clang_args))
+ 
+     # Print a copy&pastable final cmdline when asked for debugging help.
+-    cmdline = [RS_BINDINGS_FROM_CC_EXE_PATH, f"--flagfile={params_file_path}"]
++    cmdline = [args.rs_bindings_from_cc_path, f"--flagfile={params_file_path}"]
+     cmdline.extend(clang_args)
+     if "CRUBIT_DEBUG" in os.environ:
+         pretty_cmdline = format_cmdline(cmdline)
+--- a/build/rust/gni_impl/rust_target.gni
++++ b/build/rust/gni_impl/rust_target.gni
+@@ -725,9 +725,9 @@
+           # `import`ed for `LoadRustEnvAndFlags`, etc.
+           inputs = rustc_wrapper_inputs
+           if (host_os == "win") {
+-            inputs += [ "//third_party/rust-toolchain/bin/clippy-driver.exe" ]
++            inputs += [ "$rust_sysroot/bin/clippy-driver.exe" ]
+           } else {
+-            inputs += [ "//third_party/rust-toolchain/bin/clippy-driver" ]
++            inputs += [ "$rust_sysroot/bin/clippy-driver" ]
+           }
+           if (rust_clippy_conf_file != "") {
+             inputs += [ rust_clippy_conf_file ]
+@@ -735,7 +735,7 @@
+ 
+           args = [
+             "--clippy-driver",
+-            rebase_path("//third_party/rust-toolchain/bin/clippy-driver",
++            rebase_path("$rust_sysroot/bin/clippy-driver",
+                         root_build_dir),
+             "--rustc-env-and-flags",
+             rebase_path(_rustc_env_and_flags, root_build_dir),
+--- a/build/rust/rs_bindings_from_cc.gni
++++ b/build/rust/rs_bindings_from_cc.gni
+@@ -248,7 +248,14 @@
+     }
+ 
+     script = "//build/rust/gni_impl/run_rs_bindings_from_cc.py"
+-    inputs = [ "//third_party/rust-toolchain/bin/rs_bindings_from_cc" ]
++    if (host_os == "win") {
++      _rs_bindings_from_cc_exe = "${rust_sysroot}/bin/rs_bindings_from_cc.exe"
++      _rustfmt_exe = "${rust_sysroot}/bin/rustfmt.exe"
++    } else {
++      _rs_bindings_from_cc_exe = "${rust_sysroot}/bin/rs_bindings_from_cc"
++      _rustfmt_exe = "${rust_sysroot}/bin/rustfmt"
++    }
++    inputs = [ _rs_bindings_from_cc_exe ]
+     sources = invoker.public_headers
+     outputs = [
+       _rs_out_path,
+@@ -268,6 +275,10 @@
+       string_join(",", _rebased_public_headers),
+       "--targets_and_args_from_gn",
+       rebase_path(_metadata_path),
++      "--rs_bindings_from_cc_path",
++      rebase_path(_rs_bindings_from_cc_exe, root_build_dir),
++      "--rustfmt_path",
++      rebase_path(_rustfmt_exe, root_build_dir),
+     ]
+ 
+     # Several important compiler flags come from default_compiler_configs
