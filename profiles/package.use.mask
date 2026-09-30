@@ -1,0 +1,2 @@
+# Missing dep on media-video/ffmpeg-chromium for m154
+www-client/chromium ffmpeg-chromium
