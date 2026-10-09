@@ -516,8 +516,8 @@ src_prepare() {
 		"${FILESDIR}/debian/system/${PN}-154-tsc.patch"
 		"${FILESDIR}/debian/system/${PN}-154-tsc2.patch"
 		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-build-with-wasm-rollup.patch"
-		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-verification-tokens.patch"
-		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-crubit.patch"
+		"${FILESDIR}/debian/fixes/${PN}-154-verification-tokens.patch"
+		"${FILESDIR}/debian/fixes/${PN}-154-crubit.patch"
 	)
 
 	# So many fontconfig magic numbers to cover
