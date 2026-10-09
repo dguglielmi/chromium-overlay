@@ -1,0 +1,2 @@
+# Requirement not yet updated in the ebuild
+www-client/chromium bundled-toolchain
