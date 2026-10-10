@@ -1326,7 +1326,7 @@ chromium_configure() {
 		"use_thin_lto=${use_lto}"
 		# use system go
 		"tint_use_system_go=true"
-		# https://chromium.googlesource.com/v8/v8/+/56832c166a78bd1eb61068ac69876d6880eaabdf/gni/v8.gni#37
+		# https://chromium.googlesource.com/v8/v8/+/56832c166a78bd1eb61068ac69876d6880eaabdf/gni/v8.gni#37
 		"v8_use_metagen_instance_types=false"
 	)
 
