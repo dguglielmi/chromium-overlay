@@ -32,8 +32,7 @@ BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 GO_MIN_VER="1.25.0"
-ESBUILD_VER="0.25.1"
-ROLLUP_VER="4.60.4" # third_party/devtools-frontend/src/package.json
+ESBUILD_VER="0.28.2"
 VIRTUALX_REQUIRED="pgo"
 
 CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu he
@@ -55,9 +54,8 @@ DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="7aae8a84e327fc2078ce1625c9c70bfda77d626f"
 PATCH_V="152"
-COPIUM_COMMIT="5d3c1d83bb3bd52f7097a8f5a02c8108e8b80599"
+COPIUM_COMMIT="a887c5e7de6a9c768c5875625d1af814d60dc378"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
-	https://registry.npmjs.org/@rollup/wasm-node/-/wasm-node-${ROLLUP_VER}.tgz -> rollup-wasm-node-${ROLLUP_VER}.tgz
 	https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	!bundled-toolchain? (
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
@@ -438,10 +436,6 @@ src_unpack() {
 	if use ppc64; then
 		unpack chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	fi
-
-	# This is a dirty hack, but we need rollup to build successfully and it's proving to be challenging
-	# to build locally due to deps
-	unpack rollup-wasm-node-${ROLLUP_VER}.tgz
 }
 
 remove_compiler_builtins() {
@@ -511,13 +505,12 @@ src_prepare() {
 		"${WORKDIR}/chromium-patches-${PATCH_V}/common/"
 		"${FILESDIR}/${PN}-154-system-minizip-unicode.patch"
 		"${FILESDIR}/debian/fixes/${PN}-154-bytemuck.patch"
-		"${FILESDIR}/debian/fixes/${PN}-154-tsc-split-comp.patch"
+		"${FILESDIR}/debian/fixes/${PN}-155-tsc-split-comp.patch"
+		"${FILESDIR}/debian/fixes/${PN}-155-verification-tokens.patch"
+		"${FILESDIR}/debian/fixes/${PN}-155-crubit.patch"
 		"${FILESDIR}/debian/system/${PN}-154-opus.patch"
 		"${FILESDIR}/debian/system/${PN}-154-tsc.patch"
 		"${FILESDIR}/debian/system/${PN}-154-tsc2.patch"
-		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-build-with-wasm-rollup.patch"
-		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-verification-tokens.patch"
-		"${FILESDIR}/debian/ungoogled-${PN}/${PN}-154-crubit.patch"
 	)
 
 	# So many fontconfig magic numbers to cover
@@ -564,16 +557,15 @@ src_prepare() {
 	else
 		# We don't need our toolchain patches if we're using the official toolchain
 		PATCHES+=(
-			"${FILESDIR}/${PN}-154-rust-sysroot.patch"
+			"${FILESDIR}/${PN}-155-rust-sysroot.patch"
 		)
 
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${WORKDIR}/copium/cr153-no-python-vendoring.patch"
+			"${WORKDIR}/copium/cr155-no-python-vendoring.patch"
 			"${WORKDIR}/copium/cr153-typescript-break-definitions.patch"
 			"${WORKDIR}/copium/cr153-unbundle-opus-iamf.patch"
-			"${WORKDIR}/copium/cr154-devtools-fe-ai-assistance-skills.patch"
 		)
 
 		# Automate conditional application of chromium-patches
@@ -654,13 +646,6 @@ src_prepare() {
 			die "Failed to update rustfmt path"
 
 	fi
-
-	# Do this before we apply patches since (e.g.) ppc64 needs to patch rollup and it's easier in ${S}
-	einfo "Moving rollup wasm-node package into place ..."
-	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to create node_modules/@rollup/wasm-node"
-	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to move rollup package"
 
 	default
 
@@ -747,7 +732,6 @@ src_prepare() {
 		third_party/anonymous_tokens
 		third_party/apple_apsl
 		third_party/axe-core
-		third_party/bidimapper
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat
@@ -770,6 +754,7 @@ src_prepare() {
 		third_party/catapult/tracing/third_party/oboe
 		third_party/catapult/tracing/third_party/pako
 		third_party/ced
+		third_party/chromium-bidi
 		third_party/cld_3
 		third_party/closure_compiler
 		third_party/compiler-rt # Since M137 atomic is required; we could probably unbundle this as a target of opportunity.
@@ -1341,6 +1326,8 @@ chromium_configure() {
 		"use_thin_lto=${use_lto}"
 		# use system go
 		"tint_use_system_go=true"
+		# https://chromium.googlesource.com/v8/v8/+/56832c166a78bd1eb61068ac69876d6880eaabdf/gni/v8.gni#37
+		"v8_use_metagen_instance_types=false"
 	)
 
 	if use bindist ; then
