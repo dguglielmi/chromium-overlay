@@ -23,12 +23,12 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2540
+GN_MIN_VER=0.2601
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-24-init-7747-g62397f8b-27"
-BUNDLED_RUST_VER="1edd55dcfcd573872c727fa3e086369a71661ee0-1"
+BUNDLED_CLANG_VER="llvmorg-24-init-7747-g62397f8b-53"
+BUNDLED_RUST_VER="1edd55dcfcd573872c727fa3e086369a71661ee0-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 GO_MIN_VER="1.25.0"
@@ -500,17 +500,19 @@ src_prepare() {
 
 	rm -f "${WORKDIR}/chromium-patches-${PATCH_V}/common/cr152-revert-to-rollup-wasm.patch" || die
 	rm -f "${WORKDIR}/chromium-patches-${PATCH_V}/toolchain/cr152-fix-rust-2-oxidize-harder.patch" || die
+	rm -f "${WORKDIR}/chromium-patches-${PATCH_V}/toolchain/cr152-compiler.patch" || die
 
 	PATCHES+=(
 		"${WORKDIR}/chromium-patches-${PATCH_V}/common/"
+		"${FILESDIR}/cr156-compiler.patch"
 		"${FILESDIR}/${PN}-154-system-minizip-unicode.patch"
 		"${FILESDIR}/debian/fixes/${PN}-154-bytemuck.patch"
 		"${FILESDIR}/debian/fixes/${PN}-155-tsc-split-comp.patch"
-		"${FILESDIR}/debian/fixes/${PN}-155-verification-tokens.patch"
-		"${FILESDIR}/debian/fixes/${PN}-155-crubit.patch"
+		"${FILESDIR}/debian/fixes/${PN}-156-verification-tokens.patch"
+		"${FILESDIR}/debian/fixes/${PN}-156-crubit.patch"
 		"${FILESDIR}/debian/system/${PN}-154-opus.patch"
 		"${FILESDIR}/debian/system/${PN}-154-tsc.patch"
-		"${FILESDIR}/debian/system/${PN}-154-tsc2.patch"
+		"${FILESDIR}/debian/system/${PN}-156-tsc2.patch"
 	)
 
 	# So many fontconfig magic numbers to cover
