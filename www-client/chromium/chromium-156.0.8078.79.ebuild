@@ -556,6 +556,14 @@ src_prepare() {
 		ln -s "${WORKDIR}"/rust-toolchain third_party/rust-toolchain || die "Failed to bundle rust"
 		cp "${WORKDIR}"/rust-toolchain/VERSION \
 			"${WORKDIR}"/rust-toolchain/INSTALLED_VERSION || die "Failed to set rust version"
+
+		# golang is not shipped anymore with sources
+		PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}/toolchain/cr151-dawn-system-go.patch" )
+
+		PATCHES+=(
+			"${FILESDIR}/chromium-156-fix-clang-format-path.patch"
+			"${FILESDIR}/chromium-156-rust-cxxbridge-fix.patch"
+		)
 	else
 		# We don't need our toolchain patches if we're using the official toolchain
 		PATCHES+=(
